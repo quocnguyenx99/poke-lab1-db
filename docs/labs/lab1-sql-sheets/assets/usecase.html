@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #0b0f19;
+    color: #f1f5f9;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1600px;
+    height: 1100px;
+    overflow: hidden;
+  }
+  .canvas-container {
+    position: relative;
+    width: 1560px;
+    height: 1060px;
+    background: radial-gradient(circle at 50% 50%, #111827 0%, #0b0f19 100%);
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+  }
+  /* Grid background */
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    pointer-events: none;
+  }
+  .header-bar {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 15px;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+  }
+  .badge-tag {
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    color: #60a5fa;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 9999px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+  }
+  
+  /* System Boundary */
+  .system-box {
+    position: absolute;
+    top: 100px;
+    left: 360px;
+    width: 880px;
+    height: 930px;
+    background: rgba(15, 23, 42, 0.75);
+    border: 2px dashed #334155;
+    border-radius: 20px;
+    backdrop-filter: blur(8px);
+  }
+  .system-title {
+    position: absolute;
+    top: -14px;
+    left: 40px;
+    background: #1e293b;
+    border: 1px solid #475569;
+    padding: 4px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: #38bdf8;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  }
+  
+  /* Actor Card */
+  .actor-card {
+    position: absolute;
+    width: 260px;
+    background: #131b2e;
+    border: 1px solid #1e293b;
+    border-radius: 16px;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+    transition: all 0.2s ease;
+  }
+  .actor-icon-wrapper {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .actor-name {
+    font-size: 17px;
+    font-weight: 700;
+    margin-bottom: 4px;
+  }
+  .actor-desc {
+    font-size: 12px;
+    color: #94a3b8;
+    text-align: center;
+  }
+  
+  /* Specific Actors */
+  #actor-guest {
+    top: 150px;
+    left: 45px;
+    border-top: 3px solid #38bdf8;
+  }
+  #actor-guest .actor-icon-wrapper {
+    background: rgba(56, 189, 248, 0.15);
+    color: #38bdf8;
+  }
+  
+  #actor-member {
+    top: 490px;
+    left: 45px;
+    border-top: 3px solid #a855f7;
+  }
+  #actor-member .actor-icon-wrapper {
+    background: rgba(168, 85, 247, 0.15);
+    color: #c084fc;
+  }
+  
+  #actor-admin {
+    top: 400px;
+    right: 45px;
+    border-top: 3px solid #f43f5e;
+  }
+  #actor-admin .actor-icon-wrapper {
+    background: rgba(244, 63, 94, 0.15);
+    color: #fb7185;
+  }
+
+  /* Use Case Ovals */
+  .uc-oval {
+    position: absolute;
+    border-radius: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 18px;
+    font-size: 13.5px;
+    font-weight: 600;
+    line-height: 1.35;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    border: 1.5px solid;
+    z-index: 2;
+  }
+  .uc-id {
+    font-size: 10.5px;
+    font-weight: 800;
+    margin-right: 6px;
+    padding: 2px 6px;
+    border-radius: 6px;
+    background: rgba(255,255,255,0.15);
+  }
+  
+  /* Colors for modules */
+  .uc-search {
+    background: linear-gradient(135deg, #064e3b 0%, #022c22 100%);
+    border-color: #10b981;
+    color: #a7f3d0;
+  }
+  .uc-auth {
+    background: linear-gradient(135deg, #1e3a8a 0%, #0f172a 100%);
+    border-color: #3b82f6;
+    color: #bfdbfe;
+  }
+  .uc-shop {
+    background: linear-gradient(135deg, #581c87 0%, #2e1065 100%);
+    border-color: #a855f7;
+    color: #e9d5ff;
+  }
+  .uc-admin {
+    background: linear-gradient(135deg, #881337 0%, #4c0519 100%);
+    border-color: #f43f5e;
+    color: #fecdd3;
+  }
+
+  /* SVG Lines overlay */
+  .svg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .legend {
+    position: absolute;
+    bottom: 25px;
+    left: 45px;
+    background: #111827;
+    border: 1px solid #1f2937;
+    border-radius: 12px;
+    padding: 12px 20px;
+    display: flex;
+    gap: 25px;
+    align-items: center;
+    font-size: 12px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #cbd5e1;
+  }
+  .legend-line {
+    width: 28px;
+    height: 2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-container">
+  <div class="grid-pattern"></div>
+  
+  <div class="header-bar">
+    <div>
+      <div class="title">
+        <span>SƠ ĐỒ USE CASE — POKELAB STORE</span>
+        <span class="badge-tag">UML Standard</span>
+      </div>
+      <div class="subtitle">Hệ thống tra cứu, so sánh giá thẻ PSA & E-Commerce chuyên biệt</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-weight: 600; color: #f8fafc; font-size: 14px;">Lab 1: SQL & Relational Sheets</div>
+      <div style="color: #64748b; font-size: 12px;">Actors • Use Cases • Include / Extends Relations</div>
+    </div>
+  </div>
+
+  <!-- SVG Connectors -->
+  <svg class="svg-overlay" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <!-- Arrow markers -->
+      <marker id="arrow-include" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+        <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b" />
+      </marker>
+      <marker id="arrow-inherit" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="9" markerHeight="9" orient="auto-start-reverse">
+        <polygon points="0,0 10,5 0,10" fill="#131b2e" stroke="#38bdf8" stroke-width="1.8" />
+      </marker>
+    </defs>
+
+    <!-- Kế thừa Actor: Member kế thừa Guest -->
+    <path d="M 175 490 L 175 330" fill="none" stroke="#38bdf8" stroke-width="2.5" marker-end="url(#arrow-inherit)" />
+    <text x="185" y="415" fill="#38bdf8" font-size="11" font-weight="600">kế thừa quyền</text>
+
+    <!-- Guest Lines to UC1, UC2, UC3, UC4, UC5 -->
+    <!-- Guest center: (305, 230) -->
+    <!-- UC1 (520, 150) -->
+    <path d="M 305 190 C 370 190, 400 150, 430 150" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-opacity="0.75" />
+    <!-- UC2 (520, 240) -->
+    <path d="M 305 215 C 360 215, 380 235, 420 235" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-opacity="0.75" />
+    <!-- UC3 (520, 325) -->
+    <path d="M 305 240 C 360 240, 370 325, 410 325" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-opacity="0.75" />
+    <!-- UC4 (520, 415) -->
+    <path d="M 305 260 C 360 260, 370 415, 440 415" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-opacity="0.75" />
+    <!-- UC5 (520, 505) -->
+    <path d="M 305 275 C 350 275, 370 505, 440 505" fill="none" stroke="#38bdf8" stroke-width="1.8" stroke-opacity="0.75" />
+
+    <!-- Member Lines to UC6, UC7, UC8, UC9 -->
+    <!-- Member center: (305, 590) -->
+    <!-- UC6 (440, 600) -->
+    <path d="M 305 570 C 360 570, 380 595, 440 595" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-opacity="0.85" />
+    <!-- UC7 (440, 685) -->
+    <path d="M 305 595 C 360 595, 380 685, 440 685" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-opacity="0.85" />
+    <!-- UC8 (440, 775) -->
+    <path d="M 305 615 C 360 615, 380 775, 450 775" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-opacity="0.85" />
+    <!-- UC9 (440, 865) -->
+    <path d="M 305 635 C 360 635, 380 865, 440 865" fill="none" stroke="#c084fc" stroke-width="1.8" stroke-opacity="0.85" />
+
+    <!-- Admin Lines to UC10, UC11 -->
+    <!-- Admin center: (1295, 500) -->
+    <!-- UC10 (1050, 480) -->
+    <path d="M 1295 480 C 1220 480, 1180 470, 1120 470" fill="none" stroke="#fb7185" stroke-width="2" stroke-opacity="0.85" />
+    <!-- UC11 (1050, 570) -->
+    <path d="M 1295 520 C 1220 520, 1180 560, 1120 560" fill="none" stroke="#fb7185" stroke-width="2" stroke-opacity="0.85" />
+
+    <!-- Include Relationships (Dashed Yellow/Orange Lines) -->
+    <!-- UC6 (Lưu yêu thích) -> UC5 (Đăng nhập) -->
+    <path d="M 570 575 C 600 555, 600 535, 575 525" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,5" marker-end="url(#arrow-include)" />
+    <rect x="585" y="542" width="68" height="18" rx="4" fill="#1e1e24" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="590" y="555" fill="#fcd34d" font-size="10" font-weight="600">«include»</text>
+
+    <!-- UC8 (Đặt hàng) -> UC5 (Đăng nhập) -->
+    <path d="M 680 775 C 770 775, 760 520, 680 505" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,5" marker-end="url(#arrow-include)" />
+    <rect x="735" y="635" width="68" height="18" rx="4" fill="#1e1e24" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="740" y="648" fill="#fcd34d" font-size="10" font-weight="600">«include»</text>
+
+    <!-- UC8 (Đặt hàng) -> UC7 (Giỏ hàng) -->
+    <path d="M 570 755 C 590 735, 590 715, 575 705" fill="none" stroke="#f59e0b" stroke-width="1.8" stroke-dasharray="5,5" marker-end="url(#arrow-include)" />
+    <rect x="585" y="722" width="68" height="18" rx="4" fill="#1e1e24" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="590" y="735" fill="#fcd34d" font-size="10" font-weight="600">«include»</text>
+  </svg>
+
+  <!-- Actors Left -->
+  <div class="actor-card" id="actor-guest">
+    <div class="actor-icon-wrapper">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+    </div>
+    <div class="actor-name" style="color: #38bdf8;">Khách vãng lai</div>
+    <div class="actor-desc">Chưa đăng nhập, tự do tìm kiếm & so sánh giá thẻ</div>
+  </div>
+
+  <div class="actor-card" id="actor-member">
+    <div class="actor-icon-wrapper">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="8.5" cy="7" r="4"></circle>
+        <polyline points="17 11 19 13 23 9"></polyline>
+      </svg>
+    </div>
+    <div class="actor-name" style="color: #c084fc;">Thành viên</div>
+    <div class="actor-desc">Đã có tài khoản, lưu watchlist, tạo giỏ & đặt hàng</div>
+  </div>
+
+  <!-- Actor Right: Admin -->
+  <div class="actor-card" id="actor-admin">
+    <div class="actor-icon-wrapper">
+      <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+      </svg>
+    </div>
+    <div class="actor-name" style="color: #fb7185;">Quản trị viên</div>
+    <div class="actor-desc">Quản lý catalog, đồng bộ crawl giá & kiểm soát hệ thống</div>
+  </div>
+
+  <!-- System Boundary Box -->
+  <div class="system-box">
+    <div class="system-title">Hệ thống PokeLab Store (System Boundary)</div>
+
+    <!-- Group 1: Search & Browse -->
+    <div class="uc-oval uc-search" style="top: 30px; left: 70px; width: 280px; height: 50px;">
+      <span class="uc-id">UC1</span> Tra cứu / tìm kiếm thẻ PSA
+    </div>
+
+    <div class="uc-oval uc-search" style="top: 115px; left: 60px; width: 300px; height: 50px;">
+      <span class="uc-id">UC2</span> Lọc deal hời, tier, grade PSA
+    </div>
+
+    <div class="uc-oval uc-search" style="top: 200px; left: 50px; width: 330px; height: 55px;">
+      <span class="uc-id">UC3</span> Xem chi tiết & so sánh PriceCharting
+    </div>
+
+    <!-- Group 2: Authentication -->
+    <div class="uc-oval uc-auth" style="top: 295px; left: 80px; width: 260px; height: 50px;">
+      <span class="uc-id">UC4</span> Đăng ký tài khoản mới
+    </div>
+
+    <div class="uc-oval uc-auth" style="top: 380px; left: 80px; width: 260px; height: 52px; border-width: 2px; box-shadow: 0 0 15px rgba(59,130,246,0.3);">
+      <span class="uc-id">UC5</span> Đăng nhập / Xác thực
+    </div>
+
+    <!-- Group 3: Member Interaction -->
+    <div class="uc-oval uc-shop" style="top: 470px; left: 80px; width: 260px; height: 50px;">
+      <span class="uc-id">UC6</span> Lưu danh sách yêu thích
+    </div>
+
+    <div class="uc-oval uc-shop" style="top: 560px; left: 80px; width: 260px; height: 50px;">
+      <span class="uc-id">UC7</span> Quản lý giỏ hàng
+    </div>
+
+    <div class="uc-oval uc-shop" style="top: 650px; left: 90px; width: 250px; height: 52px; border-width: 2px; box-shadow: 0 0 15px rgba(168,85,247,0.3);">
+      <span class="uc-id">UC8</span> Đặt hàng (Checkout)
+    </div>
+
+    <div class="uc-oval uc-shop" style="top: 740px; left: 80px; width: 270px; height: 50px;">
+      <span class="uc-id">UC9</span> Xem lịch sử & trạng thái đơn
+    </div>
+
+    <!-- Group 4: Admin Section -->
+    <div class="uc-oval uc-admin" style="top: 350px; right: 50px; width: 270px; height: 55px;">
+      <span class="uc-id">UC10</span> Cập nhật giá & listing
+    </div>
+
+    <div class="uc-oval uc-admin" style="top: 440px; right: 50px; width: 270px; height: 55px;">
+      <span class="uc-id">UC11</span> Nạp / Đồng bộ dữ liệu catalog
+    </div>
+
+    <!-- Informational labels inside system -->
+    <div style="position: absolute; bottom: 20px; right: 30px; font-size: 11.5px; color: #64748b; line-height: 1.6; text-align: right;">
+      <div>• Quản lý giao dịch: Atomic Transaction (ACID) cho UC8</div>
+      <div>• So sánh giá tham chiếu: View <code>v_listing_deals</code></div>
+    </div>
+  </div>
+
+  <!-- Legend -->
+  <div class="legend">
+    <span style="font-weight: 700; color: #94a3b8; margin-right: 5px;">CHÚ GIẢI:</span>
+    <div class="legend-item">
+      <div class="legend-line" style="background: #38bdf8;"></div>
+      <span>Tác nhân liên kết (Association)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-line" style="border-top: 2px dashed #f59e0b;"></div>
+      <span style="color: #fcd34d;">Quan hệ phụ thuộc «include»</span>
+    </div>
+    <div class="legend-item">
+      <svg width="24" height="12"><line x1="0" y1="6" x2="18" y2="6" stroke="#38bdf8" stroke-width="2"/><polygon points="16,2 23,6 16,10" fill="#131b2e" stroke="#38bdf8" stroke-width="1.5"/></svg>
+      <span>Kế thừa (Generalization)</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

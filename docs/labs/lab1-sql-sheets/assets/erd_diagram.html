@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background-color: #0b0f19;
+    color: #f1f5f9;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 1750px;
+    height: 1150px;
+    overflow: hidden;
+  }
+  .canvas-container {
+    position: relative;
+    width: 1710px;
+    height: 1110px;
+    background: radial-gradient(circle at 50% 50%, #111827 0%, #0b0f19 100%);
+    border: 1px solid #1e293b;
+    border-radius: 20px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+  }
+  .grid-pattern {
+    position: absolute;
+    inset: 0;
+    background-size: 32px 32px;
+    background-image: 
+      linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+    pointer-events: none;
+  }
+  .header-bar {
+    position: absolute;
+    top: 25px;
+    left: 40px;
+    right: 40px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    padding-bottom: 15px;
+  }
+  .title {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: #ffffff;
+  }
+  .badge-tag {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.4);
+    color: #34d399;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 4px 12px;
+    border-radius: 9999px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: #94a3b8;
+  }
+
+  /* Table Cards */
+  .table-card {
+    position: absolute;
+    background: #131b2e;
+    border: 1px solid #1e293b;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0,0,0,0.5);
+    overflow: hidden;
+    z-index: 2;
+  }
+  .table-header {
+    padding: 10px 16px;
+    font-weight: 700;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .table-rows {
+    padding: 8px 0;
+  }
+  .table-row {
+    padding: 5px 16px;
+    font-size: 12.5px;
+    font-family: 'Consolas', 'Courier New', monospace;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #cbd5e1;
+    border-bottom: 1px solid rgba(255,255,255,0.02);
+  }
+  .field-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .badge-pk {
+    color: #fbbf24;
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(251, 191, 36, 0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .badge-fk {
+    color: #38bdf8;
+    font-size: 10px;
+    font-weight: 800;
+    background: rgba(56, 189, 248, 0.15);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+  .field-type {
+    color: #64748b;
+    font-size: 11px;
+  }
+
+  /* Header accent colors */
+  .th-amber   { background: #b45309; color: #fef3c7; }
+  .th-cyan    { background: #0e7490; color: #cffafe; }
+  .th-rose    { background: #be123c; color: #ffe4e6; }
+  .th-blue    { background: #1d4ed8; color: #dbeafe; }
+  .th-purple  { background: #6d28d9; color: #ede9fe; }
+  .th-emerald { background: #047857; color: #d1fae5; }
+  .th-indigo  { background: #4338ca; color: #e0e7ff; }
+  .th-pink    { background: #be185d; color: #fce7f3; }
+  .th-teal    { background: #0f766e; color: #ccfbf1; }
+
+  /* SVG Links */
+  .svg-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .zone-label {
+    position: absolute;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: #475569;
+    padding: 4px 10px;
+    border-radius: 6px;
+    border: 1px solid #1e293b;
+    background: rgba(15,23,42,0.6);
+  }
+</style>
+</head>
+<body>
+
+<div class="canvas-container">
+  <div class="grid-pattern"></div>
+
+  <div class="header-bar">
+    <div>
+      <div class="title">
+        <span>SƠ ĐỒ THỰC THỂ QUAN HỆ (ERD) — POKELAB STORE</span>
+        <span class="badge-tag">Chuẩn 3NF</span>
+      </div>
+      <div class="subtitle">10 Bảng quan hệ: Phân hệ Catalog Thẻ PSA & Phân hệ E-Commerce Đặt hàng</div>
+    </div>
+    <div style="text-align: right;">
+      <div style="font-weight: 600; color: #f8fafc; font-size: 14px;">PostgreSQL / SQLite Compatible</div>
+      <div style="color: #64748b; font-size: 12px;">Crow's Foot Notation • Foreign Key Integrity</div>
+    </div>
+  </div>
+
+  <div class="zone-label" style="top: 85px; left: 45px;">PHÂN HỆ CATALOG THẺ PSA (CORE 3NF)</div>
+  <div class="zone-label" style="top: 85px; left: 1140px;">PHÂN HỆ E-COMMERCE & NGƯỜI DÙNG</div>
+
+  <!-- SVG Overlay Connectors -->
+  <svg class="svg-overlay" xmlns="http://www.w3.org/2000/svg">
+    <!-- sets (1) -> cards (n) -->
+    <!-- sets right: (250, 185) -> cards left: (340, 205) -->
+    <path d="M 250 185 L 340 205" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="255" cy="186" r="3" fill="#cbd5e1"/>
+    <!-- crow foot at cards -->
+    <path d="M 330 197 L 340 205 L 330 213" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- cards (1) -> listings (n) -->
+    <!-- cards right: (570, 280) -> listings left: (680, 260) -->
+    <path d="M 570 280 L 680 260" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="576" cy="278" r="3" fill="#cbd5e1"/>
+    <path d="M 670 252 L 680 260 L 670 268" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- sellers (1) -> listings (n) -->
+    <!-- sellers bottom: (795, 630) -> listings top: (795, 500) -->
+    <!-- Wait, sellers top: (680, 690) -> listings bottom (795, 490) -->
+    <path d="M 795 490 L 795 620" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="795" cy="615" r="3" fill="#cbd5e1"/>
+    <path d="M 787 498 L 795 490 L 803 498" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- cards (1) -> price_references (n) -->
+    <!-- cards bottom: (450, 365) -> price_references top: (450, 520) -->
+    <path d="M 420 365 L 420 520" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="420" cy="372" r="3" fill="#cbd5e1"/>
+    <path d="M 412 510 L 420 520 L 428 510" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- cards (1) -> pop_reports (1) -->
+    <!-- cards bottom: (500, 365) -> pop_reports top: (500, 770) -->
+    <path d="M 500 365 L 500 770" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="500" cy="372" r="3" fill="#cbd5e1"/>
+    <line x1="495" y1="765" x2="505" y2="765" stroke="#94a3b8" stroke-width="2"/>
+
+    <!-- users (1) -> orders (n) -->
+    <!-- users right: (1320, 210) -> orders left: (1440, 210) -->
+    <path d="M 1320 210 L 1440 210" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="1327" cy="210" r="3" fill="#cbd5e1"/>
+    <path d="M 1430 203 L 1440 210 L 1430 217" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- orders (1) -> order_items (n) -->
+    <!-- orders bottom: (1550, 340) -> order_items top: (1550, 480) -->
+    <path d="M 1550 340 L 1550 480" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="1550" cy="347" r="3" fill="#cbd5e1"/>
+    <path d="M 1542 470 L 1550 480 L 1558 470" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- listings (1) -> order_items (n) -->
+    <!-- listings right: (910, 320) -> order_items left: (1440, 540) -->
+    <path d="M 910 320 C 1050 320, 1200 540, 1440 540" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="918" cy="320" r="3" fill="#cbd5e1"/>
+    <path d="M 1430 533 L 1440 540 L 1430 547" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- users (1) -> favorites (n) -->
+    <!-- users bottom: (1210, 320) -> favorites top: (1210, 510) -->
+    <path d="M 1210 320 L 1210 510" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="1210" cy="328" r="3" fill="#cbd5e1"/>
+    <path d="M 1202 500 L 1210 510 L 1218 500" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+
+    <!-- listings (1) -> favorites (n) -->
+    <!-- listings right: (910, 400) -> favorites left: (1110, 570) -->
+    <path d="M 910 400 C 980 400, 1020 570, 1110 570" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+    <circle cx="918" cy="400" r="3" fill="#cbd5e1"/>
+    <path d="M 1100 563 L 1110 570 L 1100 577" stroke="#94a3b8" stroke-width="1.8" fill="none"/>
+  </svg>
+
+  <!-- TABLE 1: sets -->
+  <div class="table-card" style="top: 130px; left: 45px; width: 205px;">
+    <div class="table-header th-amber">
+      <span>sets</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> set_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">set_name</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 2: cards -->
+  <div class="table-card" style="top: 130px; left: 340px; width: 230px;">
+    <div class="table-header th-cyan">
+      <span>cards</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> card_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-fk">FK</span> set_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">character</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">card_name</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">variant</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">year</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 3: listings -->
+  <div class="table-card" style="top: 130px; left: 680px; width: 230px;">
+    <div class="table-header th-teal">
+      <span>listings</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> listing_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-fk">FK</span> card_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-fk">FK</span> seller_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">marketplace</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">listing_type</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">grade</span>
+        <span class="field-type">REAL</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">price_usd</span>
+        <span class="field-type">REAL</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">tier_score</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">image_path</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 4: sellers -->
+  <div class="table-card" style="top: 620px; left: 680px; width: 230px;">
+    <div class="table-header th-rose">
+      <span>sellers</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> seller_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">seller_name</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">store_url</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">badge</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">transactions</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">feedback_pct</span>
+        <span class="field-type">REAL</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 5: price_references -->
+  <div class="table-card" style="top: 520px; left: 340px; width: 230px;">
+    <div class="table-header th-indigo">
+      <span>price_references</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> card_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> grade</span>
+        <span class="field-type">REAL</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> source</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">price_usd</span>
+        <span class="field-type">REAL</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">url</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 6: pop_reports -->
+  <div class="table-card" style="top: 770px; left: 340px; width: 230px;">
+    <div class="table-header th-emerald">
+      <span>pop_reports</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> card_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">psa10_pop</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">psa_total</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 7: users -->
+  <div class="table-card" style="top: 130px; left: 1110px; width: 210px;">
+    <div class="table-header th-blue">
+      <span>users</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> user_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">email</span>
+        <span class="field-type">TEXT (UQ)</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">display_name</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">created_at</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 8: orders -->
+  <div class="table-card" style="top: 130px; left: 1440px; width: 220px;">
+    <div class="table-header th-purple">
+      <span>orders</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span> order_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-fk">FK</span> user_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">status</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">total_usd</span>
+        <span class="field-type">REAL</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">created_at</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 9: order_items -->
+  <div class="table-card" style="top: 480px; left: 1440px; width: 220px;">
+    <div class="table-header th-amber">
+      <span>order_items</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> order_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> listing_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">quantity</span>
+        <span class="field-type">INTEGER</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">unit_price_usd</span>
+        <span class="field-type">REAL</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLE 10: favorites -->
+  <div class="table-card" style="top: 510px; left: 1110px; width: 210px;">
+    <div class="table-header th-pink">
+      <span>favorites</span>
+    </div>
+    <div class="table-rows">
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> user_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name"><span class="badge-pk">PK</span><span class="badge-fk">FK</span> listing_id</span>
+        <span class="field-type">TEXT</span>
+      </div>
+      <div class="table-row">
+        <span class="field-name">created_at</span>
+        <span class="field-type">TEXT</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Note box -->
+  <div style="position: absolute; bottom: 25px; left: 45px; right: 45px; background: #111827; border: 1px solid #1f2937; border-radius: 12px; padding: 12px 20px; display: flex; justify-content: space-between; align-items: center; font-size: 12.5px; color: #94a3b8;">
+    <div>
+      <span style="font-weight: 700; color: #f1f5f9;">Ghi chú thiết kế:</span> 
+      <span style="color: #cbd5e1; margin-left: 5px;">Mọi giá trị dẫn xuất (tier S/A/B/C/D, diff%, deal_rating) được tính toán động qua SQL VIEW <code>v_listing_deals</code>, không lưu dư thừa trong bảng.</span>
+    </div>
+    <div style="display: flex; gap: 15px;">
+      <span style="display: flex; align-items: center; gap: 6px;"><span class="badge-pk">PK</span> Primary Key</span>
+      <span style="display: flex; align-items: center; gap: 6px;"><span class="badge-fk">FK</span> Foreign Key</span>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

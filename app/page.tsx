@@ -1,9 +1,11 @@
-import catalogData from '@/data/catalog/catalog.json';
-import { PokemonCard } from '@/types/card';
 import { Dashboard } from '@/components/Dashboard';
+import { getCatalog } from '@/lib/data-source';
 
-export default function Page() {
-  const catalog = (catalogData || []) as unknown as PokemonCard[];
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
+export default async function Page() {
+  const catalog = await getCatalog();
 
   return <Dashboard initialCatalog={catalog} />;
 }
